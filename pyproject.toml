@@ -18,23 +18,23 @@ package-mode = false  # application repo, not a published library — see src-la
 # as a remaining PEP 621 migration opportunity; accepted deliberately rather than rewriting
 # every dependency declaration for marginal benefit -- verified with a real `poetry check`
 # (Milestone 13), not assumed.
-requests = "^2.32"          # frontend/api_client.py (Milestone 10) -- moved here from the
+requests = "^2.34"          # frontend/api_client.py (Milestone 10) -- moved here from the
 # ingestion-only group since the frontend needs it unconditionally, not just for ingestion
 
 # --- Vector store — core default; alternates are optional extras below ---
-faiss-cpu = "^1.8"
+faiss-cpu = "^1.15"
 
 # --- API / UI ---
-fastapi = "^0.112"
-python-multipart = "^0.0.20"  # required by FastAPI for multipart/form-data (the /upload endpoint)
-uvicorn = {extras = ["standard"], version = "^0.30"}
-streamlit = "^1.37"
-pydantic = "^2.8"
+fastapi = "^0.141"
+python-multipart = "^0.0.32"  # required by FastAPI for multipart/form-data (the /upload endpoint)
+uvicorn = {extras = ["standard"], version = "^0.52"}
+streamlit = "^1.61"
+pydantic = "^2.13"
 
 # --- Observability ---
-opentelemetry-sdk = "^1.26"
-opentelemetry-instrumentation-fastapi = "^0.47b0"
-scipy = "^1.14"             # src/monitoring/drift_monitoring.py's real KS-test drift detection --
+opentelemetry-sdk = "^1.44"
+opentelemetry-instrumentation-fastapi = "^0.65b0"
+scipy = "^1.18"             # src/monitoring/drift_monitoring.py's real KS-test drift detection --
 # core, always-functional monitoring capability, unlike langsmith/OTLP export below
 
 [tool.poetry.group.vectorstores]
