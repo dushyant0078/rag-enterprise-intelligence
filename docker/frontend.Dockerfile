@@ -3,7 +3,7 @@
 # is a pure HTTP client of the API image (frontend/api_client.py) -- it needs streamlit and
 # requests, nothing from src/ or the API's heavier ML dependencies at all.
 
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 
 ENV POETRY_HOME=/opt/poetry \
     POETRY_NO_INTERACTION=1 \
@@ -25,7 +25,7 @@ COPY pyproject.toml poetry.lock* ./
 RUN poetry install --only main --no-root --no-directory
 
 
-FROM python:3.12-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 RUN groupadd --gid 1000 appuser \
     && useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
