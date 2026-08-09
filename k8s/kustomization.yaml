@@ -1,0 +1,27 @@
+# Apply everything with: kubectl apply -k k8s/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: rag-enterprise-intelligence
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: rag-enterprise-intelligence
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: false
+    # false preserves the older commonLabels behavior (labels added to metadata only) --
+    # Deployments/Services here already set explicit selectors on app.kubernetes.io/name,
+    # and letting kustomize also inject into selectors risks selector/label mismatches
+    # rather than adding anything useful.
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - api-pvc.yaml
+  - api-deployment.yaml
+  - api-service.yaml
+  - api-hpa.yaml
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - ingress.yaml

@@ -1,0 +1,5 @@
+# Default reranker. Alternates: cohere_rerank, cross_encoder_ms_marco.
+name: bge_reranker
+provider: huggingface
+model_id: BAAI/bge-reranker-large
+top_k_output: 8

@@ -1,0 +1,9 @@
+# Default embedding backend. Alternates: e5_large, minilm, instructor_xl, gte_large.
+name: bge_large
+provider: sentence_transformers
+model_id: BAAI/bge-large-en-v1.5
+dimensions: 1024
+batch_size: 32
+normalize: true
+device: auto          # auto | cpu | cuda
+cache_embeddings: true

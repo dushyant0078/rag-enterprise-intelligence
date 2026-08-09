@@ -1,0 +1,64 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Data (raw/processed/embeddings are runtime artifacts, not committed) ---
+data/raw/*
+data/processed/*
+data/embeddings/*
+data/metadata/*
+data/feedback/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/embeddings/.gitkeep
+!data/metadata/.gitkeep
+!data/feedback/.gitkeep
+
+documents/*
+!documents/.gitkeep
+!documents/README.md
+
+# --- Notebooks: strip checkpoints, keep source ---
+.ipynb_checkpoints/
+
+# --- MLOps / experiment tracking ---
+mlruns/*
+!mlruns/.gitkeep
+mlartifacts/
+
+# --- Vector store local persistence ---
+*.faiss
+*.index
+qdrant_storage/
+chroma_storage/
+
+# --- Reports: summarized (.md) reports are committed as milestone evidence;
+# raw run data (.json and everything else) is not, per reports/README.md.
+reports/*
+!reports/.gitkeep
+!reports/README.md
+!reports/*.md
+
+# --- Docker / build ---
+*.log
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,10 @@
+# Managed cloud service -- no local/offline mode exists by design. Correct,
+# complete client code, not verified in this sandbox (no network access to
+# Pinecone's API). See src/retrieval/vectorstore/pinecone_store.py.
+name: pinecone
+provider: pinecone
+index_name: rag-enterprise-intelligence
+api_key: null   # set via PINECONE_API_KEY env var, not committed here
+cloud: aws
+region: us-east-1
+namespace_isolation: true   # namespace -> Pinecone's native namespace, 1:1

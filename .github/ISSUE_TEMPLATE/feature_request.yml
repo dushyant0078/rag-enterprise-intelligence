@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest something this project doesn't do yet.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: If you have one in mind. Check docs/ first — several "obvious" extensions (per-domain incremental reindex, shared session storage for multi-replica scaling, RAGAS integration once the upstream dependency conflict clears) are already documented as known, deliberate gaps with the reasoning for why they weren't built yet.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

@@ -1,0 +1,7 @@
+# Default LLM backend. Alternates: claude, gemini, llama3, mistral_large, qwen, deepseek.
+name: gpt4
+provider: openai
+model_id: gpt-4.1
+temperature: 0.1              # low temperature — grounded QA, not creative generation
+max_tokens: 1024
+timeout_seconds: 30

@@ -1,0 +1,6 @@
+# Fully local, no server required (chromadb.PersistentClient) -- real backend,
+# tested end-to-end in this project (see docs/05_vectorstore_and_retrieval.md).
+name: chroma
+provider: chroma
+persist_dir: data/embeddings/chroma_store
+namespace_isolation: true   # namespace -> Chroma collection, 1:1

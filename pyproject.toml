@@ -1,0 +1,158 @@
+[project]
+name = "rag-enterprise-intelligence"
+version = "0.1.0"
+description = "LLM-powered RAG Enterprise Document Intelligence System — citation-aware, evaluation-driven retrieval-augmented QA over multi-format enterprise document collections."
+authors = [{name = "Dushyant"}]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+
+[tool.poetry]
+package-mode = false  # application repo, not a published library — see src-layout note below
+
+[tool.poetry.dependencies]
+# Declared here (Poetry's own dependency table) rather than migrated to [project.dependencies]
+# because this project genuinely uses Poetry-specific syntax throughout (extras like
+# uvicorn's below, caret version ranges, and the dependency-group system) that PEP 621's
+# plain requirement-string list handles less readably. `poetry check` correctly flags this
+# as a remaining PEP 621 migration opportunity; accepted deliberately rather than rewriting
+# every dependency declaration for marginal benefit -- verified with a real `poetry check`
+# (Milestone 13), not assumed.
+requests = "^2.32"          # frontend/api_client.py (Milestone 10) -- moved here from the
+# ingestion-only group since the frontend needs it unconditionally, not just for ingestion
+
+# --- Vector store — core default; alternates are optional extras below ---
+faiss-cpu = "^1.8"
+
+# --- API / UI ---
+fastapi = "^0.112"
+python-multipart = "^0.0.20"  # required by FastAPI for multipart/form-data (the /upload endpoint)
+uvicorn = {extras = ["standard"], version = "^0.30"}
+streamlit = "^1.37"
+pydantic = "^2.8"
+
+# --- Observability ---
+opentelemetry-sdk = "^1.26"
+opentelemetry-instrumentation-fastapi = "^0.47b0"
+scipy = "^1.14"             # src/monitoring/drift_monitoring.py's real KS-test drift detection --
+# core, always-functional monitoring capability, unlike langsmith/OTLP export below
+
+[tool.poetry.group.vectorstores]
+optional = true
+[tool.poetry.group.vectorstores.dependencies]
+qdrant-client = "^1.10"
+chromadb = "^0.5"
+weaviate-client = "^4.7"
+pinecone = "^5.0"          # PyPI package renamed from "pinecone-client" to "pinecone" in v5
+
+[tool.poetry.group.embeddings]
+optional = true
+[tool.poetry.group.embeddings.dependencies]
+scikit-learn = "^1.5"      # powers the offline TfidfEmbedding backend -- see src/embeddings/tfidf_backend.py
+sentence-transformers = "^3.0"  # SentenceTransformersEmbedding -- correct, network-blocked-in-sandbox
+# backend (HF Hub); pulls in transformers transitively, no need to declare it separately
+
+[tool.poetry.group.retrieval]
+optional = true
+[tool.poetry.group.retrieval.dependencies]
+rank-bm25 = "^0.2"         # BM25Retriever -- see src/retrieval/sparse_bm25.py
+
+[tool.poetry.group.reranking]
+optional = true
+[tool.poetry.group.reranking.dependencies]
+cohere = "^5.0 || ^7.0"     # CohereReranker -- see src/reranking/cohere_reranker.py; tested against 7.0.8
+sentence-transformers = "^3.0"  # CrossEncoderReranker -- same package as the embeddings group's
+# SentenceTransformersEmbedding; declared in both since each group should install standalone
+
+[tool.poetry.group.llm]
+optional = true
+[tool.poetry.group.llm.dependencies]
+anthropic = "^0.121"        # ClaudeLLM -- verified live against api.anthropic.com in this sandbox
+openai = "^2.0"              # OpenAILLM + OpenAICompatibleLLM (Llama3/Mistral/Qwen/DeepSeek)
+google-genai = "^1.0"        # GeminiLLM -- current SDK; google-generativeai is deprecated upstream
+
+[tool.poetry.group.evaluation]
+optional = true
+[tool.poetry.group.evaluation.dependencies]
+ragas = "^0.4"               # import currently broken by an upstream dependency conflict --
+# see src/evaluation/ragas_integration.py's module docstring for the full diagnosis
+deepeval = "^4.1"            # verified importable; metric construction needs a configured LLM judge
+
+[tool.poetry.group.ingestion]
+optional = true
+[tool.poetry.group.ingestion.dependencies]
+pytesseract = "^0.3"
+pypdf = "^5.0"
+pymupdf = "^1.24"
+python-docx = "^1.1"
+python-pptx = "^1.0"
+beautifulsoup4 = "^4.12"
+unstructured = "^0.15"
+langdetect = "^1.0.9"
+markdown = "^3.6"
+
+[tool.poetry.group.monitoring]
+optional = true
+[tool.poetry.group.monitoring.dependencies]
+langsmith = ">=0.3.45,<1.0.0"  # src/monitoring/langsmith_integration.py -- import-verified, untestable
+# here (api.smith.langchain.com is blocked at this sandbox's egress proxy); real production
+# tracing needs LANGSMITH_API_KEY plus network access this sandbox doesn't have
+opentelemetry-exporter-otlp = "^1.26"  # src/monitoring/tracing.py's real OTLP export path --
+# needs a reachable collector to actually send anywhere; the console/in-memory exporters
+# tracing.py also provides don't need this and are what's actually verified in tests
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+pytest-asyncio = "^0.24"
+httpx = "^0.28"                # required by FastAPI's TestClient (tests/api/)
+pytest-cov = "^5.0"
+black = "^24.8"
+isort = "^5.13"
+ruff = "^0.6"
+mypy = "^1.11"
+pre-commit = "^3.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# --- Tool configuration ---
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+src_paths = ["src", "api", "frontend", "tests"]
+known_first_party = ["src", "api", "frontend"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "api", "frontend", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# FastAPI's dependency-injection pattern is Depends(...)/File(...)/Form(...) as an argument
+# default by design (FastAPI evaluates it per-request, not once at import time) -- B008 is a
+# real smell for ordinary Python but a false positive for every FastAPI route signature, and
+# every real FastAPI codebase carries this same exclusion.
+"api/routers/*.py" = ["B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "api", "frontend"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+disallow_untyped_defs = false  # tightened as each src/ subpackage lands
+
+[tool.pytest.ini_options]
+# Everything imports as `src.<subpackage>...` / `api.<module>` (absolute, from the repo root),
+# so no extra sys.path wiring is needed beyond running pytest from the repo root itself.
+testpaths = ["tests"]
+addopts = "-ra --cov=src --cov-report=term-missing"

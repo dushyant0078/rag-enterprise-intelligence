@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Cache Poetry-managed virtualenv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          # No poetry.lock is committed (see docs/13_github_cicd.md for why) -- keyed on
+          # pyproject.toml's hash instead, so the cache still busts correctly whenever
+          # dependencies actually change, just without lockfile-level precision.
+          key: poetry-venv-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            poetry-venv-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Lint (black --check, isort --check, ruff)
+        run: make lint
+
+      - name: Typecheck (mypy)
+        run: make typecheck
+
+  test:
+    name: Test suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Cache Poetry-managed virtualenv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: poetry-venv-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            poetry-venv-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Run tests
+        run: poetry run pytest --cov=src --cov=api --cov=frontend --cov-report=xml --cov-report=term
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 14
+
+  deployment-artifacts:
+    name: Validate Docker & Kubernetes artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install validation tools (hadolint, kubeconform, kustomize)
+        run: |
+          curl -sSL -o /usr/local/bin/hadolint \
+            "https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64"
+          chmod +x /usr/local/bin/hadolint
+
+          curl -sSL "https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz" \
+            | tar xz -C /usr/local/bin kubeconform
+
+          curl -sSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz" \
+            | tar xz -C /usr/local/bin kustomize
+
+      - name: Install Python validation dependencies
+        run: pip install --quiet jsonschema pyyaml
+
+      - name: Run validate_deployment_artifacts.sh
+        run: bash scripts/validate_deployment_artifacts.sh
+
+  docker-build:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    # Real Docker build verification -- unlike the sandbox this project was developed in,
+    # GitHub Actions runners do have a Docker daemon, so this closes the one honestly-stated
+    # gap in docs/12_docker_kubernetes_deployment.md ("no Docker image was actually built or
+    # run"). push: false -- this job verifies the build succeeds, it doesn't publish anywhere.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/api.Dockerfile
+          push: false
+          tags: rag-enterprise-intelligence/api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/frontend.Dockerfile
+          push: false
+          tags: rag-enterprise-intelligence/frontend:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,8 @@
+name: gte_large
+provider: sentence_transformers
+model_id: thenlper/gte-large
+dimensions: 1024
+batch_size: 16
+normalize: true
+device: auto
+cache_embeddings: true

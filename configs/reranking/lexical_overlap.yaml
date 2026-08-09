@@ -1,0 +1,6 @@
+# Fully offline reranker (no external model, no network) -- what's actually
+# exercised end-to-end in this project's sandbox. See
+# src/reranking/lexical_overlap.py and docs/06_reranking_and_prompting.md.
+name: lexical_overlap
+provider: lexical
+top_k_output: 8

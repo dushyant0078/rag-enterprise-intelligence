@@ -1,0 +1,9 @@
+# Network-reachable from this project's dev sandbox (api.anthropic.com is not blocked),
+# unlike every other LLM backend here -- only an API key is missing in that environment.
+# See src/llm/claude_llm.py and docs/07_conversational_rag_pipeline.md.
+name: claude
+provider: anthropic
+model_id: claude-sonnet-4-5
+temperature: 0.1
+max_tokens: 1024
+timeout_seconds: 30

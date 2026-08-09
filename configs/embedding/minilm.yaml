@@ -1,0 +1,8 @@
+name: minilm
+provider: sentence_transformers
+model_id: sentence-transformers/all-MiniLM-L6-v2
+dimensions: 384
+batch_size: 64          # small/fast model — larger batches are cheap
+normalize: true
+device: auto
+cache_embeddings: true

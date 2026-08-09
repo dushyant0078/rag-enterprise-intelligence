@@ -1,0 +1,59 @@
+# Local multi-container orchestration for the two services this project actually built:
+# the FastAPI backend (Milestone 9) and the Streamlit dashboard (Milestone 10), which talks
+# to the API purely over HTTP (frontend/api_client.py) -- matching how they run in Kubernetes
+# too (see k8s/), just without an Ingress/Service layer in front.
+#
+# Quickstart:
+#   docker compose up --build
+#   API:      http://localhost:8000/docs
+#   Frontend: http://localhost:8501  (enter an API key printed in `docker compose logs api`
+#             on first startup -- see src/security/api_auth.py's demo-key generation)
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      RAG_PROCESSED_DIR: /app/data/processed
+      RAG_INDEX_DIR: /app/data/embeddings/faiss_index
+      RAG_RAW_UPLOAD_DIR: /app/data/raw/api_uploads
+      RAG_METADATA_DIR: /app/data/metadata
+      RAG_FEEDBACK_DIR: /app/data/feedback
+      RAG_TRACE_CONSOLE: "false"
+      # Real credentials, only if you've configured a real LLM/vector-store backend (see
+      # configs/llm/ and configs/vectorstore/) -- unset is fine, the pipeline falls back to
+      # DeterministicTestLLM + FAISS + TF-IDF, same as every test in this repo.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      API_ADMIN_KEY: ${API_ADMIN_KEY:-}
+      API_HR_KEY: ${API_HR_KEY:-}
+    volumes:
+      - rag-data:/app/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      RAG_API_BASE_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  rag-data:
+    # Persists ingested documents, the FAISS index, and feedback across container restarts.
+    # In Kubernetes this is a PersistentVolumeClaim instead -- see k8s/api-pvc.yaml.

@@ -1,0 +1,6 @@
+# Hosted API -- no offline mode. Requires COHERE_API_KEY (see .env.example) and
+# network access to Cohere's API, not reachable in this project's dev sandbox.
+name: cohere_rerank
+provider: cohere
+model: rerank-english-v3.0
+top_k_output: 8

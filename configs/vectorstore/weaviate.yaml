@@ -1,0 +1,9 @@
+# Requires a reachable Weaviate instance (local Docker container or Weaviate
+# Cloud) -- correct, complete client code, not verified in this sandbox (no
+# offline embedded mode reachable here). See
+# src/retrieval/vectorstore/weaviate_store.py.
+name: weaviate
+provider: weaviate
+url: localhost
+api_key: null   # set via WEAVIATE_API_KEY env var, not committed here
+namespace_isolation: true   # namespace -> Weaviate collection, 1:1

@@ -1,0 +1,22 @@
+# Backs /app/data (ingested documents, the FAISS index, feedback records) -- see api/state.py's
+# RAG_*_DIR paths and MonitoringAggregator's FeedbackStore. ReadWriteOnce is the correct,
+# safe default for the single-replica deployment this manifest set targets by default (see
+# api-hpa.yaml's caveat about replicas > 1): each pod needs its own consistent view of an
+# index that /reindex rebuilds in place, and a naive ReadWriteMany across replicas would let
+# one pod's in-progress reindex race another's read. Scaling to multiple replicas correctly
+# needs either a shared read-only index (serve reads from a ReadOnlyMany mount, reindex via
+# a separate job that republishes it) or moving the index to a real vector-store service
+# (Qdrant/Weaviate/Pinecone -- already real, tested code in src/retrieval/vectorstore/, just
+# not what this default deployment topology assumes) -- a deliberate v1 scope boundary, not
+# an oversight.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rag-api-data
+  namespace: rag-enterprise-intelligence
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

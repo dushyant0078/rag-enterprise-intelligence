@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-api
+  namespace: rag-enterprise-intelligence
+  labels:
+    app.kubernetes.io/name: rag-api
+    app.kubernetes.io/part-of: rag-enterprise-intelligence
+spec:
+  # 1 replica by default -- see api-pvc.yaml and api-hpa.yaml for exactly why scaling this
+  # requires more than bumping the number (session state and the FAISS index aren't yet
+  # shared across pods; ReadWriteOnce here would also block a second pod from mounting the
+  # same volume). Safe, correct, and honestly scoped for this project's actual architecture.
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rag-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rag-api
+    spec:
+      containers:
+        - name: rag-api
+          image: rag-enterprise-intelligence/api:latest
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: rag-api-config
+            - secretRef:
+                name: rag-api-secrets
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          # /health returns "degraded" (still HTTP 200, see api/routers/system.py) when no
+          # documents are indexed yet -- a real startup state, not a failure, so both probes
+          # check for a response at all rather than parsing the body for "status": "ok".
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: rag-api-data

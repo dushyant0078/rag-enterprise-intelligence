@@ -1,0 +1,32 @@
+# Root Hydra config. Every pipeline component below is swappable by overriding
+# its group default, e.g.:
+#   python -m src.retrieval.run vectorstore=qdrant llm=claude
+#
+# This file is the config *surface* established in Milestone 2; each group's
+# loading/validation logic is implemented alongside its component milestone
+# (embedding -> Milestone 4, vectorstore/retrieval -> Milestone 5,
+# reranking -> Milestone 6, llm -> Milestone 6-7).
+
+defaults:
+  - embedding: bge_large
+  - vectorstore: faiss
+  - retrieval: hybrid
+  - reranking: bge_reranker
+  - llm: gpt4
+  - _self_
+
+app:
+  name: rag-enterprise-intelligence
+  env: local          # local | staging | production
+
+context_builder:
+  max_context_tokens: 6000
+  top_k_after_rerank: 8
+
+response_validator:
+  enabled: true
+  min_faithfulness_score: 0.7   # below this, fall back to "insufficient evidence"
+
+logging:
+  level: INFO
+  json: true

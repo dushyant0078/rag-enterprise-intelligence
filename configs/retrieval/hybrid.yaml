@@ -1,0 +1,8 @@
+# Default retrieval strategy. Alternates: dense, sparse_bm25, multi_query, self_query,
+# parent_child, contextual_compression, ensemble.
+name: hybrid
+dense_weight: 0.6
+sparse_weight: 0.4
+top_k_candidates: 25
+rbac_filter: true            # enforced regardless of strategy — see security constraints in docs/01
+time_aware: true

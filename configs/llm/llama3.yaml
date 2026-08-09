@@ -1,0 +1,8 @@
+# Routes through OpenAICompatibleLLM -- set base_url to your chosen inference provider
+# (Together AI, Groq, Fireworks, a self-hosted vLLM/Ollama endpoint, ...).
+name: llama3
+provider: openai_compatible
+model_id: meta-llama/Llama-3.3-70B-Instruct
+base_url: https://api.together.xyz/v1   # example provider -- swap for your own
+temperature: 0.1
+max_tokens: 1024

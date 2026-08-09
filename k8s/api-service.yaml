@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-api
+  namespace: rag-enterprise-intelligence
+  labels:
+    app.kubernetes.io/name: rag-api
+spec:
+  selector:
+    app.kubernetes.io/name: rag-api
+  ports:
+    - port: 8000
+      targetPort: http
+      name: http
+  # ClientIP session affinity: a real, standard partial mitigation if replicas is ever raised
+  # above 1 before the shared-session-store work in api-pvc.yaml's comment is done -- routes
+  # a given client IP consistently to the same pod. Real limits worth knowing, not glossed
+  # over: breaks down behind NAT/shared corporate IPs (many users could get pinned to one
+  # pod), and doesn't survive that pod being rescheduled. A correct fix for real multi-replica
+  # use is moving session storage to something shared (Redis, as sketched conceptually in
+  # docs/02_architecture.md's deployment topology), not just this annotation.
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800

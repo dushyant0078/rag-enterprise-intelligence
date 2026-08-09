@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    # Groups reduce PR noise -- one grouped PR per ecosystem area per week rather than one
+    # PR per package. Security updates always get their own immediate PR regardless of
+    # grouping (Dependabot's default behavior, not something configured here).
+    groups:
+      production-dependencies:
+        dependency-type: production
+      development-dependencies:
+        dependency-type: development
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: "/docker"
+    schedule:
+      interval: weekly

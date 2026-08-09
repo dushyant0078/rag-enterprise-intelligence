@@ -1,0 +1,48 @@
+# Version control & CI
+.git
+.github
+
+# Python artifacts
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+htmlcov
+.coverage
+*.egg-info
+
+# Virtual environments
+.venv
+venv
+
+# Runtime data (mounted as volumes, not baked into the image -- see docker-compose.yml)
+data/raw/*
+data/processed/*
+data/embeddings/*
+data/metadata/*
+data/feedback/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/embeddings/.gitkeep
+!data/metadata/.gitkeep
+!data/feedback/.gitkeep
+
+# Local env files (real secrets never belong in an image layer)
+.env
+.env.*
+!.env.example
+
+# Editor/OS cruft
+.vscode
+.idea
+.DS_Store
+
+# Docs and reports not needed at runtime
+docs
+reports
+*.md
+!README.md
+
+# Sample source documents used only by scripts/generate_sample_documents.py
+documents

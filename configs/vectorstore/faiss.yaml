@@ -1,0 +1,8 @@
+# Default vector store for local dev. Alternates: qdrant, chroma, weaviate, pinecone.
+name: faiss
+provider: faiss
+index_type: flat   # exact search (IndexFlatIP) -- correct choice at this project's corpus
+# size; HNSW is a documented future swap for approximate search at much larger scale
+# (see docs/05_vectorstore_and_retrieval.md), not implemented since it isn't needed yet.
+persist_dir: data/embeddings/faiss_index
+namespace_isolation: true   # one collection/index per document domain (see docs/02_architecture.md #8)

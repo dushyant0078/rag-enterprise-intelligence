@@ -1,0 +1,10 @@
+# Air-gapped / offline-capable embedding backend -- no external network access
+# required at any point (see src/embeddings/tfidf_backend.py). Fit locally on
+# the ingested corpus rather than loaded as pretrained weights, so
+# "dimensions" is a target for SVD reduction, not a fixed model property.
+name: tfidf_offline
+provider: tfidf
+max_features: 4096
+svd_dimensions: 256
+normalize: true
+cache_embeddings: true

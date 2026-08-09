@@ -1,0 +1,26 @@
+# Included because the spec calls for it and because the Deployment/Service above already
+# document real, working (if partial) mitigations for scaling past 1 replica -- but the
+# honest recommendation is: don't raise maxReplicas above 1 until session storage is moved
+# off local pod state (see api-pvc.yaml and api-service.yaml's comments) and the FAISS index
+# is served from something pods can safely share. Shipped here as correct, real
+# infrastructure-as-code for when that work lands, not as a claim that this deployment
+# horizontally scales correctly today.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rag-api
+  namespace: rag-enterprise-intelligence
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rag-api
+  minReplicas: 1
+  maxReplicas: 1
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

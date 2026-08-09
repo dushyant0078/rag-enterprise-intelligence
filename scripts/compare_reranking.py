@@ -1,0 +1,148 @@
+"""Compare retrieval before vs. after reranking, against the real sample
+corpus — the Milestone 6 counterpart to scripts/compare_chunking_strategies.py
+(Milestone 4) and scripts/build_index_and_compare_retrieval.py (Milestone 5).
+
+Uses BM25 for first-pass retrieval (top-5 candidates) and
+LexicalOverlapReranker (the offline reranker actually exercised in this
+sandbox — see docs/06_reranking_and_prompting.md for why) to rescore them.
+Reports both Hit@1 and the rank position of the first correct-domain result,
+since Hit@1 alone saturates fast on a 7-query eval set and rank position
+shows reranking's effect even when it doesn't flip the top result.
+
+Run: python -m scripts.compare_reranking
+"""
+
+from __future__ import annotations
+
+import glob
+import json
+from pathlib import Path
+
+from src.chunking.registry import get_chunker
+from src.parsing.schemas import ParsedDocument
+from src.reranking.lexical_overlap import LexicalOverlapReranker
+from src.retrieval.sparse_bm25 import BM25Retriever
+from src.retrieval.vectorstore.schemas import VectorRecord
+
+PROCESSED_DIR = Path("data/processed")
+REPORT_DIR = Path("reports")
+CANDIDATE_POOL_SIZE = 5
+
+# Same eval set as Milestones 4 and 5, for a direct three-way comparison.
+EVAL_QUERIES: list[tuple[str, str]] = [
+    ("enhanced due diligence threshold for international wire transfers", "banking"),
+    ("how many weeks of paid parental leave in the first year", "hr"),
+    ("water damage coverage if the property was vacant", "insurance"),
+    ("notice period to terminate the vendor agreement for convenience", "legal"),
+    ("lockout tagout procedure before servicing the equipment", "technical"),
+    ("which metric besides accuracy should be reported for imbalanced classification", "research"),
+    ("what was the top risk factor reported last quarter", "financial"),
+]
+
+
+def load_records() -> list[VectorRecord]:
+    chunker = get_chunker("hybrid")
+    records = []
+    for f in sorted(glob.glob(str(PROCESSED_DIR / "**" / "*.json"), recursive=True)):
+        data = json.loads(Path(f).read_text())
+        doc_id = Path(f).stem
+        domain = doc_id.split("__")[0]
+        doc = ParsedDocument(**data)
+        for c in chunker.chunk(doc, doc_id):
+            records.append(
+                VectorRecord(
+                    id=c.chunk_id,
+                    vector=[],  # unused by BM25 -- only the vector-store backends need this
+                    metadata={"text": c.text, "doc_id": c.doc_id, "domain": domain},
+                )
+            )
+    return records
+
+
+def rank_of_first_correct(results, expected_prefix: str) -> int | None:
+    for i, r in enumerate(results, start=1):
+        if r.doc_id.startswith(expected_prefix):
+            return i
+    return None
+
+
+def main() -> None:
+    records = load_records()
+    if not records:
+        raise SystemExit("No processed documents found -- run ingestion first (see Milestone 3).")
+    print(f"Built BM25 index over {len(records)} hybrid-chunked records from the sample corpus.\n")
+
+    bm25 = BM25Retriever(records=records)
+    reranker = LexicalOverlapReranker()
+
+    rows = []
+    pre_hits = 0
+    post_hits = 0
+    for query, expected in EVAL_QUERIES:
+        candidates = bm25.retrieve(query, top_k=CANDIDATE_POOL_SIZE)
+        reranked = reranker.rerank(query, candidates)
+
+        pre_rank = rank_of_first_correct(candidates, expected)
+        post_rank = rank_of_first_correct(reranked, expected)
+        pre_hit = pre_rank == 1
+        post_hit = post_rank == 1
+        pre_hits += bool(pre_hit)
+        post_hits += bool(post_hit)
+
+        rows.append(
+            {
+                "query": query,
+                "expected": expected,
+                "pre_rerank_top1_doc": candidates[0].doc_id if candidates else None,
+                "post_rerank_top1_doc": reranked[0].doc_id if reranked else None,
+                "pre_rerank_rank_of_correct": pre_rank,
+                "post_rerank_rank_of_correct": post_rank,
+                "pre_hit_at_1": pre_hit,
+                "post_hit_at_1": post_hit,
+            }
+        )
+        print(f"[{'✅' if post_hit else '❌'}] rank {pre_rank} -> {post_rank}  {query[:65]}")
+
+    n = len(EVAL_QUERIES)
+    summary = {
+        "pre_rerank_hit_at_1": round(pre_hits / n, 2),
+        "post_rerank_hit_at_1": round(post_hits / n, 2),
+        "candidate_pool_size": CANDIDATE_POOL_SIZE,
+        "per_query": rows,
+    }
+
+    print(f"\nHit@1 before reranking: {summary['pre_rerank_hit_at_1']}")
+    print(f"Hit@1 after reranking:  {summary['post_rerank_hit_at_1']}")
+
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    (REPORT_DIR / "milestone6_reranking_comparison.json").write_text(json.dumps(summary, indent=2))
+    write_markdown_report(summary)
+    print(f"\nWrote {REPORT_DIR / 'milestone6_reranking_comparison.md'}")
+
+
+def write_markdown_report(summary: dict) -> None:
+    lines = [
+        "# Reranking Comparison — Milestone 6",
+        "",
+        "Generated by `scripts/compare_reranking.py`: BM25 first-pass retrieval (top-5) over the",
+        "real hybrid-chunked sample corpus, then `LexicalOverlapReranker` rescoring — the same 7",
+        "hand-written queries used in the Milestone 4 and 5 comparisons.",
+        "",
+        f"**Hit@1 before reranking:** {summary['pre_rerank_hit_at_1']}  ",
+        f"**Hit@1 after reranking:** {summary['post_rerank_hit_at_1']}",
+        "",
+        "| Query | Expected | Rank of correct doc (pre → post) | Hit@1 (post) |",
+        "|---|---|---|---|",
+    ]
+    for r in summary["per_query"]:
+        pre = r["pre_rerank_rank_of_correct"] or "not in top-5"
+        post = r["post_rerank_rank_of_correct"] or "not in top-5"
+        hit_mark = "✅" if r["post_hit_at_1"] else "❌"
+        lines.append(f"| {r['query']} | {r['expected']} | {pre} → {post} | {hit_mark} |")
+    (REPORT_DIR / "milestone6_reranking_comparison.md").write_text(
+        "\n".join(lines), encoding="utf-8"
+    )
+
+
+if __name__ == "__main__":
+    main()

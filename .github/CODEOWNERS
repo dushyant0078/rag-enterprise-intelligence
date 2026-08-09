@@ -1,0 +1,7 @@
+# Default owner for everything not matched below.
+* @OWNER
+
+# Deployment artifacts get an extra pass from whoever owns infra, if that's ever someone else.
+/docker/ @OWNER
+/k8s/ @OWNER
+/.github/workflows/ @OWNER

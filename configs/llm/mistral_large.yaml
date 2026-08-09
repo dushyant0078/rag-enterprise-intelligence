@@ -1,0 +1,6 @@
+name: mistral_large
+provider: openai_compatible
+model_id: mistral-large-latest
+base_url: https://api.mistral.ai/v1
+temperature: 0.1
+max_tokens: 1024

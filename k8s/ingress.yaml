@@ -1,0 +1,34 @@
+# Assumes an nginx ingress controller (the most common default; swap the ingressClassName
+# and annotations if your cluster uses a different one). Routes the dashboard at the root
+# path and the API under /api -- the API's own OpenAPI schema and route definitions
+# (api/routers/*.py) use bare paths like /chat, not /api/chat, so a real deployment behind
+# this prefix needs either an nginx rewrite (shown below) or the API's routers mounted under
+# an /api prefix at the FastAPI app level -- this manifest takes the rewrite approach so
+# api/main.py doesn't need changing for something that's a routing concern, not an app concern.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rag-enterprise-intelligence
+  namespace: rag-enterprise-intelligence
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: rag.example.com  # replace with your real domain
+      http:
+        paths:
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: rag-api
+                port:
+                  name: http
+          - path: /()(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: rag-frontend
+                port:
+                  name: http

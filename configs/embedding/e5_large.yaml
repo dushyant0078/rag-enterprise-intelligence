@@ -1,0 +1,10 @@
+name: e5_large
+provider: sentence_transformers
+model_id: intfloat/e5-large-v2
+dimensions: 1024
+batch_size: 32
+normalize: true
+device: auto
+cache_embeddings: true
+# Note: e5 models expect "query: " / "passage: " prefixes on input text for best
+# results -- applied by the retrieval layer (Milestone 5), not the embedding backend itself.

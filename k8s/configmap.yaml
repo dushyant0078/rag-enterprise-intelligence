@@ -1,0 +1,29 @@
+# Non-secret configuration. Real API keys/credentials go in secret.yaml instead -- never here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-api-config
+  namespace: rag-enterprise-intelligence
+data:
+  # Container-internal paths (see api/state.py) -- not secrets, just where the API writes
+  # inside its own filesystem, backed by the PVC mounted at /app/data (see api-deployment.yaml).
+  RAG_PROCESSED_DIR: /app/data/processed
+  RAG_INDEX_DIR: /app/data/embeddings/faiss_index
+  RAG_RAW_UPLOAD_DIR: /app/data/raw/api_uploads
+  RAG_METADATA_DIR: /app/data/metadata
+  RAG_FEEDBACK_DIR: /app/data/feedback
+  RAG_TRACE_CONSOLE: "false"
+  APP_ENV: production
+  LOG_LEVEL: INFO
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-frontend-config
+  namespace: rag-enterprise-intelligence
+data:
+  # Cluster-internal DNS name of the api Service (see api-service.yaml) -- this is the fix
+  # verified in frontend/api_client.py's resolve_default_base_url(): the frontend must reach
+  # the API by Service name, not localhost, and this ConfigMap is where that name is set for
+  # the real deployment (docker-compose.yml sets the equivalent for local Compose).
+  RAG_API_BASE_URL: http://rag-api:8000

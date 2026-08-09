@@ -1,0 +1,9 @@
+# Local embedded mode by default (on-disk, no server) -- real backend, tested
+# end-to-end. Point `url` at a real Qdrant server instead of setting
+# `persist_dir` for a production deployment; the client class and all
+# retrieval logic on top of it are identical either way.
+name: qdrant
+provider: qdrant
+persist_dir: data/embeddings/qdrant_store
+# url: http://localhost:6333    # uncomment (and drop persist_dir) for server mode
+namespace_isolation: true   # namespace -> Qdrant collection, 1:1

@@ -1,0 +1,8 @@
+name: instructor_xl
+provider: sentence_transformers
+model_id: hkunlp/instructor-xl
+dimensions: 768
+batch_size: 8            # large model — smaller batches to bound memory use
+normalize: true
+device: auto
+cache_embeddings: true

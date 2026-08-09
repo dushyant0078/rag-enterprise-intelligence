@@ -1,0 +1,6 @@
+name: cross_encoder_ms_marco
+provider: sentence_transformers
+model_id: cross-encoder/ms-marco-MiniLM-L-6-v2
+batch_size: 32
+device: auto
+top_k_output: 8
