@@ -1,0 +1,21 @@
+# Core
+requests==2.32.3
+fastapi==0.112.2
+python-multipart==0.0.20
+uvicorn[standard]==0.30.6
+pydantic==2.8.2
+faiss-cpu==1.8.0.post1
+scipy==1.14.1
+
+# Default embedding backend (TF-IDF) — lightweight, no GPU/torch needed
+scikit-learn==1.5.2
+
+# Observability (used by src/monitoring/)
+opentelemetry-sdk==1.26.0
+opentelemetry-instrumentation-fastapi==0.47b0
+
+# Frontend
+streamlit==1.37.1
+
+# Optional: real Claude LLM backend instead of the offline DeterministicTestLLM
+anthropic==0.34.2

@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: rag-enterprise-intelligence-api
+    runtime: docker
+    dockerfilePath: ./docker/api.Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: RAG_PROCESSED_DIR
+        value: /app/data/processed
+      - key: RAG_INDEX_DIR
+        value: /app/data/embeddings/faiss_index
+      - key: RAG_RAW_UPLOAD_DIR
+        value: /app/data/raw/api_uploads
+      - key: RAG_METADATA_DIR
+        value: /app/data/metadata
+      - key: RAG_FEEDBACK_DIR
+        value: /app/data/feedback
+      - key: RAG_TRACE_CONSOLE
+        value: "false"
+      - key: API_ADMIN_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+    buildFilter:
+      paths:
+        - api/**
+        - src/**
+        - configs/**
+        - docker/api.Dockerfile
