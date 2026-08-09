@@ -1,11 +1,13 @@
 # Core
+setuptools<81
 requests==2.32.3
 fastapi==0.112.2
 python-multipart==0.0.20
 uvicorn[standard]==0.30.6
 pydantic==2.8.2
-faiss-cpu==1.8.0.post1
+faiss-cpu==1.9.0.post1
 scipy==1.14.1
+langdetect==1.0.9
 
 # Default embedding backend (TF-IDF) — lightweight, no GPU/torch needed
 scikit-learn==1.5.2
@@ -19,3 +21,13 @@ streamlit==1.37.1
 
 # Optional: real Claude LLM backend instead of the offline DeterministicTestLLM
 anthropic==0.34.2
+
+# Document parsing (src/parsing/) — needed for ingestion at startup
+python-docx==1.1.2
+python-pptx==1.0.2
+beautifulsoup4==4.12.3
+markdown==3.7
+pypdf==5.0.1
+pymupdf
+pytesseract==0.3.13
+unstructured
