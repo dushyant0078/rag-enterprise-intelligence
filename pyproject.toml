@@ -40,16 +40,16 @@ scipy = "^1.14"             # src/monitoring/drift_monitoring.py's real KS-test 
 [tool.poetry.group.vectorstores]
 optional = true
 [tool.poetry.group.vectorstores.dependencies]
-qdrant-client = "^1.10"
-chromadb = "^0.5"
-weaviate-client = "^4.7"
-pinecone = "^5.0"          # PyPI package renamed from "pinecone-client" to "pinecone" in v5
+qdrant-client = "^1.19"
+chromadb = "^1.5"
+weaviate-client = "^4.23"
+pinecone = "^9.1"          # PyPI package renamed from "pinecone-client" to "pinecone" in v5
 
 [tool.poetry.group.embeddings]
 optional = true
 [tool.poetry.group.embeddings.dependencies]
 scikit-learn = "^1.5"      # powers the offline TfidfEmbedding backend -- see src/embeddings/tfidf_backend.py
-sentence-transformers = "^3.0"  # SentenceTransformersEmbedding -- correct, network-blocked-in-sandbox
+sentence-transformers = "^6.0"  # SentenceTransformersEmbedding -- correct, network-blocked-in-sandbox
 # backend (HF Hub); pulls in transformers transitively, no need to declare it separately
 
 [tool.poetry.group.retrieval]
@@ -61,22 +61,22 @@ rank-bm25 = "^0.2"         # BM25Retriever -- see src/retrieval/sparse_bm25.py
 optional = true
 [tool.poetry.group.reranking.dependencies]
 cohere = "^5.0 || ^7.0"     # CohereReranker -- see src/reranking/cohere_reranker.py; tested against 7.0.8
-sentence-transformers = "^3.0"  # CrossEncoderReranker -- same package as the embeddings group's
+sentence-transformers = "^6.0"  # CrossEncoderReranker -- same package as the embeddings group's
 # SentenceTransformersEmbedding; declared in both since each group should install standalone
 
 [tool.poetry.group.llm]
 optional = true
 [tool.poetry.group.llm.dependencies]
 anthropic = "^0.121"        # ClaudeLLM -- verified live against api.anthropic.com in this sandbox
-openai = "^2.0"              # OpenAILLM + OpenAICompatibleLLM (Llama3/Mistral/Qwen/DeepSeek)
-google-genai = "^1.0"        # GeminiLLM -- current SDK; google-generativeai is deprecated upstream
+openai = "^3.5"              # OpenAILLM + OpenAICompatibleLLM (Llama3/Mistral/Qwen/DeepSeek)
+google-genai = "^2.20"        # GeminiLLM -- current SDK; google-generativeai is deprecated upstream
 
 [tool.poetry.group.evaluation]
 optional = true
 [tool.poetry.group.evaluation.dependencies]
 ragas = "^0.4"               # import currently broken by an upstream dependency conflict --
 # see src/evaluation/ragas_integration.py's module docstring for the full diagnosis
-deepeval = "^4.1"            # verified importable; metric construction needs a configured LLM judge
+deepeval = "^4.2"            # verified importable; metric construction needs a configured LLM judge
 
 [tool.poetry.group.ingestion]
 optional = true
@@ -94,23 +94,23 @@ markdown = "^3.6"
 [tool.poetry.group.monitoring]
 optional = true
 [tool.poetry.group.monitoring.dependencies]
-langsmith = ">=0.3.45,<1.0.0"  # src/monitoring/langsmith_integration.py -- import-verified, untestable
+langsmith = ">=0.11.1,<1.0.0"  # src/monitoring/langsmith_integration.py -- import-verified, untestable
 # here (api.smith.langchain.com is blocked at this sandbox's egress proxy); real production
 # tracing needs LANGSMITH_API_KEY plus network access this sandbox doesn't have
-opentelemetry-exporter-otlp = "^1.26"  # src/monitoring/tracing.py's real OTLP export path --
+opentelemetry-exporter-otlp = "^1.44"  # src/monitoring/tracing.py's real OTLP export path --
 # needs a reachable collector to actually send anywhere; the console/in-memory exporters
 # tracing.py also provides don't need this and are what's actually verified in tests
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3"
-pytest-asyncio = "^0.24"
+pytest = "^9.1"
+pytest-asyncio = "^1.4"
 httpx = "^0.28"                # required by FastAPI's TestClient (tests/api/)
-pytest-cov = "^5.0"
-black = "^24.8"
-isort = "^5.13"
-ruff = "^0.6"
-mypy = "^1.11"
-pre-commit = "^3.8"
+pytest-cov = "^7.1"
+black = "^26.5"
+isort = "^9.0"
+ruff = "^0.16"
+mypy = "^2.3"
+pre-commit = "^4.6"
 
 [build-system]
 requires = ["poetry-core"]
