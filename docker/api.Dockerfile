@@ -8,7 +8,7 @@
 # this default image doesn't assume are present -- add them with EXTRA_POETRY_GROUPS at
 # build time (see docker-compose.yml) if your deployment's config selects those backends.
 
-FROM python:3.12-slim AS builder
+FROM python:3.15-slim AS builder
 
 ENV POETRY_HOME=/opt/poetry \
     POETRY_NO_INTERACTION=1 \
@@ -38,7 +38,7 @@ RUN poetry install --only main,embeddings${EXTRA_POETRY_GROUPS:+,${EXTRA_POETRY_
     --no-root --no-directory
 
 
-FROM python:3.12-slim AS runtime
+FROM python:3.15-slim AS runtime
 
 RUN groupadd --gid 1000 appuser \
     && useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
